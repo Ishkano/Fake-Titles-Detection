@@ -44,7 +44,7 @@ class TextPreproc:
             self.vocab = Counter()
             self.preprocd_data = self.data.copy(deep=True)
             self.preprocd_data[self.preprocd_data.columns[0]] = \
-                self.preproc_data(self.data[self.data.columns[0]])
+                self.preproc_data(self.data[self.data.columns[0]], fix_vocab=False)
             self.preprocd_data.to_csv('preprocd_{}'.format(data_path), sep='\t', index=False)
 
             word_list = sorted(self.vocab, key=self.vocab.get, reverse=True)
@@ -52,7 +52,7 @@ class TextPreproc:
                 output.write(" ".join(word_list))
 
         word_list = sorted(word_list)
-        self.vocab_to_int = {word: idx + 1 for idx, word in enumerate(word_list)}
+        self.vocab_to_int = {word: idx for idx, word in enumerate(word_list)}
         self.int_to_vocab = {idx: word for word, idx in self.vocab_to_int.items()}
 
     def load_data(self, data_path):
@@ -66,7 +66,7 @@ class TextPreproc:
         df.columns = [name.lower() for name in df.columns]
         return df
 
-    def preproc_data(self, text_corpus):
+    def preproc_data(self, text_corpus, fix_vocab=True):
 
         '''
             text_corpus - list of messages, each message have str type
@@ -101,7 +101,8 @@ class TextPreproc:
                     lemmed_tokens.append(morph.parse(token)[0].normal_form)
 
             clean_text = [token for token in lemmed_tokens if token not in stop_words]
-            self.vocab.update(clean_text)
+            if not fix_vocab:
+                self.vocab.update(clean_text)
             out.append(" ".join(clean_text))
 
         return out
